@@ -1,0 +1,65 @@
+---
+title: WBX Sandbox
+description: Run Deep Agents commands and file operations in WBX Sandbox Firecracker microVMs.
+---
+
+{/* Prepared for a hosted guide page in langchain-ai/docs. LangChain hosts guide pages
+    only for integrations with 50,000+ monthly downloads or ones featured by maintainers;
+    until then the package is listed through the "Integration listing" issue. */}
+
+[WBX Sandbox](https://sandbox.wbx.cz) runs code in isolated cloud sandboxes. Each sandbox is a
+Firecracker microVM with its own Linux kernel and disk, started from a template. Network access
+follows your team's network rules and can be restricted per sandbox.
+
+`langchain-wbxsandbox` provides `WBXSandbox`, a Deep Agents sandbox backend: the agent's
+`execute` tool and file tools (`ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`)
+run inside the sandbox.
+
+## Setup
+
+```bash
+pip install langchain-wbxsandbox
+```
+
+Create an API key in the WBX Sandbox portal and set it:
+
+```bash
+export WBXSANDBOX_API_KEY="..."
+```
+
+## Usage
+
+```python
+from deepagents import create_deep_agent
+from langchain_wbxsandbox import WBXSandbox
+
+with WBXSandbox.create(template="base", lifetime=1800) as sandbox:
+    agent = create_deep_agent(
+        model="anthropic:claude-sonnet-4-6",
+        system_prompt="You are a coding assistant. Use the sandbox to run code.",
+        backend=sandbox,
+    )
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": "Write fib.py that prints the first 10 Fibonacci numbers and run it."}]}
+    )
+```
+
+The sandbox is destroyed when the `with` block ends. Without a `with` block, call
+`sandbox.kill()`; a sandbox is also destroyed automatically when its `lifetime` runs out.
+
+## Lifecycle
+
+```python
+sandbox = WBXSandbox.create(template="base", lifetime=3600, timeout=600)
+same = WBXSandbox.connect(sandbox.id)   # reattach later
+sandbox.kill()                          # destroy disk and memory
+```
+
+## Pricing
+
+See [WBX Sandbox pricing](https://sandbox.wbx.cz/pricing).
+
+## Links
+
+- [Package on PyPI](https://pypi.org/project/langchain-wbxsandbox/)
+- [Source and README](https://github.com/WBX-Sandbox/langchain-wbxsandbox)

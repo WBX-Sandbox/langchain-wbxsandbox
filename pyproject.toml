@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "langchain-wbxsandbox"
+version = "0.1.0"
+description = "WBX Sandbox integration for Deep Agents – run agent code in Firecracker microVMs"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "KXCOMM s.r.o." }]
+requires-python = ">=3.11,<4.0"
+keywords = ["langchain", "deepagents", "sandbox", "firecracker", "microvm", "ai agents", "wbx"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "deepagents>=0.7.0,<0.8.0",
+    "wbxsandbox>=0.15.2,<0.16",
+]
+
+[project.urls]
+Homepage = "https://sandbox.wbx.cz"
+Documentation = "https://github.com/WBX-Sandbox/langchain-wbxsandbox#readme"
+Repository = "https://github.com/WBX-Sandbox/langchain-wbxsandbox"
+Changelog = "https://github.com/WBX-Sandbox/langchain-wbxsandbox/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+test = [
+    "pytest>=8.3,<10",
+    "pytest-asyncio>=1.0",
+    "pytest-socket>=0.7",
+    "pytest-timeout>=2.4,<3",
+    "langchain-tests==1.1.9",
+]
+lint = [
+    "ruff>=0.15,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["langchain_wbxsandbox"]
+
+[tool.hatch.build.targets.sdist]
+include = ["langchain_wbxsandbox", "tests", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "D"]
+ignore = ["D105", "D107"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**/*.py" = ["D"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config --durations=5"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "class"
+filterwarnings = [
+    "error",
+    # langchain_core imports pydantic.v1 during collection on Python 3.14+
+    "ignore:Core Pydantic V1 functionality isn't compatible:UserWarning",
+    # SandboxIntegrationTests (langchain-tests) defines class-scoped fixtures as
+    # instance methods – the pattern the suite requires; pytest 9 deprecates it.
+    "ignore:Class-scoped fixtures defined as instance methods are deprecated:pytest.PytestRemovedIn10Warning",
+]

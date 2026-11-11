@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1" # weekly: catches breaking releases of deepagents / langchain-tests
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e . --group lint
+      - run: ruff check .
+      - run: ruff format --check .
+
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e . --group test
+      - run: pytest tests/unit_tests --disable-socket --allow-unix-socket -v
+
+  integration:
+    # Real sandboxes on WBX Sandbox. Needs the WBXSANDBOX_API_KEY repository secret;
+    # without it (forks, missing secret) the tests are skipped. One run at a time.
+    runs-on: ubuntu-latest
+    needs: unit
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    concurrency:
+      group: integration
+      cancel-in-progress: false
+    env:
+      WBXSANDBOX_API_KEY: ${{ secrets.WBXSANDBOX_API_KEY }}
+      WBXSANDBOX_URL: ${{ vars.WBXSANDBOX_URL || 'https://sandbox.wbx.cz' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e . --group test
+      - name: Standard sandbox tests (sandbox is created and destroyed by the test fixture)
+        run: pytest tests/integration_tests -v --timeout 300
