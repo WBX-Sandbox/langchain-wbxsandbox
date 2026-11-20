@@ -9,7 +9,7 @@ description = "WBX Sandbox integration for Deep Agents – run agent code in Fir
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "KXCOMM s.r.o." }]
+authors = [{ name = "WBX Sandbox" }]
 requires-python = ">=3.11,<4.0"
 keywords = ["langchain", "deepagents", "sandbox", "firecracker", "microvm", "ai agents", "wbx"]
 classifiers = [

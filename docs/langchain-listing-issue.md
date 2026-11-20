@@ -10,7 +10,7 @@ Submit through the "Integration listing" issue form in the LangChain docs reposi
 - **Class:** `WBXSandbox` (`from langchain_wbxsandbox import WBXSandbox`)
 - **Documentation:** https://github.com/WBX-Sandbox/langchain-wbxsandbox#readme
 - **Repository:** https://github.com/WBX-Sandbox/langchain-wbxsandbox
-- **Maintained by:** KXCOMM s.r.o., the company that operates WBX Sandbox
+- **Maintained by:** the WBX Sandbox team
 - **Standard tests:** `SandboxIntegrationTests` from langchain-tests 1.1.9 run in CI against
   real sandboxes; 7 tests are non-strict xfail because they also fail for a plain
   `BaseSandbox` with deepagents 0.7.x (`write()` overwrite and absolute `glob()` paths).
