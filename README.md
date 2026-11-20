@@ -2,12 +2,27 @@
 
 [WBX Sandbox](https://sandbox.wbx.cz) backend for [Deep Agents](https://docs.langchain.com/oss/python/deepagents/overview).
 It lets a deep agent run shell commands and work with files inside a WBX sandbox instead of
-on your own machine.
+on your own machine. WBX Sandbox is listed among the sandbox integrations in the LangChain
+documentation.
 
 Each WBX sandbox is a Firecracker microVM with its own Linux kernel and disk, started from
-a template (for example `base`, Debian with Python). Network access follows your team's
-network rules and can be restricted per sandbox (no network, or allowed destinations only).
-The sandbox and its data are destroyed when you kill it or when its lifetime runs out.
+a template (for example `base`, Debian with Python) on servers in the EU. Network access follows
+your team's network rules and can be restricted per sandbox (no network, or allowed destinations
+only). The sandbox and its data are destroyed when you kill it or when its lifetime runs out.
+
+What the agent gets:
+
+- the `execute` tool and the file tools (`ls`, `read_file`, `write_file`, `edit_file`, `glob`,
+  `grep`), all running inside the microVM – root access, `pip`, `npm` and `apt` available
+- templates for Python, data analysis, a real browser, Node.js and more
+  ([templates](https://sandbox.wbx.cz/docs/templates))
+- network control: full internet, an allowlist or no network at all
+  ([network](https://sandbox.wbx.cz/docs/sandboxes/network))
+- billing per second of vCPU and memory ([pricing](https://sandbox.wbx.cz/pricing))
+
+Beyond this backend, the same account gives you background jobs and batches with price limits,
+signed execution receipts, public HTTPS URLs, metrics and an MCP server for AI assistants – see
+the [documentation](https://sandbox.wbx.cz/docs).
 
 ## Install
 
@@ -67,6 +82,9 @@ from langchain_wbxsandbox import WBXSandbox
 # Create: template, lifetime (seconds until automatic destruction) and the default
 # limit for one command (seconds). Other options go to wbxsandbox.Sandbox.create(),
 # for example internet=False, allow=["pypi.org"], env={...}, metadata={...}.
+# With a current wbxsandbox you can also pass name="my-project" and on_timeout="pause"
+# (the sandbox falls asleep with its files instead of being destroyed), ip="dual" or
+# compute_class="performance" – see https://sandbox.wbx.cz/docs/sdk.
 sandbox = WBXSandbox.create(template="base", lifetime=3600, timeout=600)
 print(sandbox.id)
 
