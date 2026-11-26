@@ -276,6 +276,16 @@ def test_create_passes_template_lifetime_and_options() -> None:
     assert sdk.run.call_args.kwargs["timeout"] == 90
 
 
+def test_create_from_snapshot_sends_no_template() -> None:
+    sdk = MagicMock(spec=wbxsandbox.Sandbox)
+    sdk.id = "sb_snap"
+    with patch.object(wbxsandbox.Sandbox, "create", return_value=sdk) as create:
+        WBXSandbox.create(from_snapshot="snap_1", api_key="k")
+    kw = create.call_args.kwargs
+    assert kw["template"] is None  # the SDK then uses the snapshot's template
+    assert kw["from_snapshot"] == "snap_1"
+
+
 def test_connect_attaches_by_id() -> None:
     sdk = MagicMock(spec=wbxsandbox.Sandbox)
     sdk.id = "sb_old"
