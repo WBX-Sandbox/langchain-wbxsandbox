@@ -122,7 +122,7 @@ class WBXSandbox(BaseSandbox):
     def create(
         cls,
         *,
-        template: str = "base",
+        template: str | None = None,
         lifetime: int = DEFAULT_LIFETIME,
         timeout: int = DEFAULT_COMMAND_TIMEOUT,
         url: str | None = None,
@@ -132,14 +132,19 @@ class WBXSandbox(BaseSandbox):
         """Create a new sandbox and return a backend for it.
 
         Args:
-            template: Sandbox template, for example `"base"` (Debian with Python).
-            lifetime: Seconds until the sandbox is destroyed automatically.
+            template: Sandbox template, for example `"base"` (Debian with Python, the
+                default) or `"fullstack"` (Python and Node.js). Leave it out with
+                `from_snapshot`: the sandbox gets the snapshot's template.
+            lifetime: Lifetime in seconds. When it ends the sandbox is destroyed, or
+                falls asleep with `on_timeout="pause"` (files and running programs
+                kept, woken by the next command).
             timeout: Default limit for one command in seconds (`0` = no limit).
             url: API address. Defaults to `WBXSANDBOX_URL`, then
                 `https://sandbox.wbx.cz`.
             api_key: API key. Defaults to `WBXSANDBOX_API_KEY`.
             **kwargs: Passed to `wbxsandbox.Sandbox.create()`, for example
-                `metadata`, `env`, `internet`, `allow` or `compute_class`.
+                `from_snapshot`, `name`, `on_timeout`, `metadata`, `env`, `internet`,
+                `allow` or `compute_class`.
         """
         sandbox = wbxsandbox.Sandbox.create(
             template=template, timeout=lifetime, url=url, api_key=api_key, **kwargs
