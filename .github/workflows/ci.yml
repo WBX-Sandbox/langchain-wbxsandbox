@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -59,8 +59,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - run: python -m pip install --upgrade pip
       - run: pip install -e . --group test
-      - name: Standard sandbox tests (sandbox is created and destroyed by the test fixture)
+      - name: Standard sandbox tests and the Deep Agents Code provider (every sandbox is deleted)
         run: pytest tests/integration_tests -v --timeout 300
