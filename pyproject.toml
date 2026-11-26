@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "langchain-wbxsandbox"
-version = "0.1.0"
+version = "0.2.0"
 description = "WBX Sandbox integration for Deep Agents – run agent code in Firecracker microVMs"
 readme = "README.md"
 license = "MIT"
@@ -19,12 +19,16 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
     "deepagents>=0.7.0,<0.8.0",
-    "wbxsandbox>=0.15.2,<0.16",
+    "wbxsandbox>=0.20.0,<1",
 ]
+
+[project.entry-points."deepagents_code.sandbox_providers"]
+wbx = "langchain_wbxsandbox.dcode:WBXSandboxProvider"
 
 [project.urls]
 Homepage = "https://sandbox.wbx.cz"
@@ -38,7 +42,9 @@ test = [
     "pytest-asyncio>=1.0",
     "pytest-socket>=0.7",
     "pytest-timeout>=2.4,<3",
-    "langchain-tests==1.1.9",
+    "langchain-tests==1.2.0",
+    # the Deep Agents Code provider is tested where deepagents-code installs (Python 3.14)
+    "deepagents-code>=0.2.15; python_version >= '3.14'",
 ]
 lint = [
     "ruff>=0.15,<1",
@@ -73,6 +79,11 @@ filterwarnings = [
     "error",
     # langchain_core imports pydantic.v1 during collection on Python 3.14+
     "ignore:Core Pydantic V1 functionality isn't compatible:UserWarning",
+    # langsmith (via langchain-tests) on Python 3.14
+    "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning",
+    # wbxsandbox <= 0.20.0 leaves an HTTP error response unclosed (fixed in the next SDK release)
+    "ignore:Implicitly cleaning up <HTTPError:ResourceWarning",
+    "ignore:Exception ignored while calling deallocator:pytest.PytestUnraisableExceptionWarning",
     # SandboxIntegrationTests (langchain-tests) defines class-scoped fixtures as
     # instance methods – the pattern the suite requires; pytest 9 deprecates it.
     "ignore:Class-scoped fixtures defined as instance methods are deprecated:pytest.PytestRemovedIn10Warning",

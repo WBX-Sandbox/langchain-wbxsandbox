@@ -6,7 +6,7 @@ on your own machine. WBX Sandbox is listed among the sandbox integrations in the
 documentation.
 
 Each WBX sandbox is a Firecracker microVM with its own Linux kernel and disk, started from
-a template (for example `base`, Debian with Python) on servers in the EU. Network access follows
+a template (for example `base`, Debian with Python) on servers in Europe. Network access follows
 your team's network rules and can be restricted per sandbox (no network, or allowed destinations
 only). The sandbox and its data are destroyed when you kill it or when its lifetime runs out.
 
@@ -19,6 +19,7 @@ What the agent gets:
 - network control: full internet, an allowlist or no network at all
   ([network](https://sandbox.wbx.cz/docs/sandboxes/network))
 - billing per second of vCPU and memory ([pricing](https://sandbox.wbx.cz/pricing))
+- the `wbx` sandbox provider for [Deep Agents Code](#deep-agents-code-dcode) (`dcode --sandbox wbx`)
 
 Beyond this backend, the same account gives you background jobs and batches with price limits,
 signed execution receipts, public HTTPS URLs, metrics and an MCP server for AI assistants – see
@@ -81,9 +82,9 @@ from langchain_wbxsandbox import WBXSandbox
 
 # Create: template, lifetime (seconds until automatic destruction) and the default
 # limit for one command (seconds). Other options go to wbxsandbox.Sandbox.create(),
-# for example internet=False, allow=["pypi.org"], env={...}, metadata={...}.
-# With a current wbxsandbox you can also pass name="my-project" and on_timeout="pause"
-# (the sandbox falls asleep with its files instead of being destroyed), ip="dual" or
+# for example internet=False, allow=["pypi.org"], env={...}, metadata={...},
+# name="my-project" with on_timeout="pause" (the sandbox falls asleep with its files
+# instead of being destroyed), from_snapshot="snap_...", ip="dual" or
 # compute_class="performance" – see https://sandbox.wbx.cz/docs/sdk.
 sandbox = WBXSandbox.create(template="base", lifetime=3600, timeout=600)
 print(sandbox.id)
@@ -109,6 +110,19 @@ sb = wbxsandbox.Sandbox.create(template="code-interpreter", timeout=900)
 backend = WBXSandbox(sandbox=sb)
 ```
 
+Start agents from a prepared environment with a snapshot:
+
+```python
+setup = WBXSandbox.create(template="fullstack")
+setup.execute(
+    "pip install -q pandas && git clone https://github.com/you/project /home/user/project"
+)
+snap = setup.sandbox.snapshot(name="ready")  # disk copy, kept until you delete it
+setup.kill()
+
+sandbox = WBXSandbox.create(from_snapshot=snap.id)  # starts with everything installed
+```
+
 Behaviour worth knowing:
 
 - `execute()` runs the command with `/bin/sh -c`. Output is stdout followed by stderr,
@@ -118,6 +132,38 @@ Behaviour worth knowing:
   as `permission_denied` by `download_files()`, as on a system where the agent runs as an
   unprivileged user.
 - Uploads create missing parent directories. Relative paths are rejected with `invalid_path`.
+
+## Deep Agents Code (`dcode`)
+
+The package registers the `wbx` sandbox provider for
+[Deep Agents Code](https://docs.langchain.com/oss/python/deepagents/cli/remote-sandboxes), so
+after installing it next to `deepagents-code` no configuration is needed:
+
+```bash
+pip install langchain-wbxsandbox
+export WBXSANDBOX_API_KEY="..."
+
+dcode --sandbox wbx                               # new sandbox, deleted when the session ends
+dcode --sandbox wbx --sandbox-id sb_...           # work in an existing sandbox (it is kept)
+dcode --sandbox wbx --sandbox-snapshot-name ready # start from a snapshot (name or snap_...)
+dcode --sandbox wbx --sandbox-setup setup.sh      # run a setup script first
+```
+
+- New sandboxes use the `fullstack` template (Python, Node.js, git); the working directory is
+  `/home/user`. Set `WBXSANDBOX_TEMPLATE` for another template.
+- A sandbox lives two hours and then falls asleep instead of being destroyed; the next
+  command wakes it, so a long session keeps working. A sandbox left behind (for example
+  after a crash) is deleted one day after it falls asleep.
+- `WBXSANDBOX_API_KEY` and `WBXSANDBOX_URL` can also be set with the `DEEPAGENTS_CODE_` prefix.
+- Options for `wbxsandbox.Sandbox.create()` go to `~/.deepagents/config.toml`:
+
+  ```toml
+  [sandboxes.providers.wbx.params]
+  compute_class = "performance"
+  internet = true
+  ```
+
+Deep Agents Code needs Python 3.14; the backend itself works from Python 3.11.
 
 ## Pricing
 
@@ -133,7 +179,9 @@ ruff check . && ruff format --check .
 ```
 
 The integration tests run the LangChain standard sandbox suite (`SandboxIntegrationTests`)
-against a real sandbox and destroy it afterwards.
+against a real sandbox and destroy it afterwards. On Python 3.14 the `test` group also installs
+`deepagents-code`, and the tests of the `wbx` provider run too (offline and against real
+sandboxes).
 
 ## License
 
