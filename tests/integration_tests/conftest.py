@@ -1,6 +1,6 @@
 """Known upstream mismatch in the standard sandbox suite.
 
-`langchain-tests` 1.1.9 (May 2026) still expects the older `BaseSandbox` behaviour:
+`langchain-tests` 1.2.0 (like 1.1.9) still expects the older `BaseSandbox` behaviour:
 `write()` refusing to overwrite an existing file and `glob()` returning paths
 relative to the search root. `deepagents` 0.7.x overwrites existing files
 ("creating or overwriting it if it already exists") and returns absolute paths.
@@ -29,7 +29,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         if getattr(item, "originalname", item.name) in _UPSTREAM_MISMATCH:
             item.add_marker(
                 pytest.mark.xfail(
-                    reason="deepagents 0.7.x BaseSandbox vs langchain-tests 1.1.9 expectations",
+                    reason="deepagents 0.7.x BaseSandbox vs langchain-tests 1.2 expectations",
                     strict=False,
                 )
             )
